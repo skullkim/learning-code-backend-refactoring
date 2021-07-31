@@ -33,5 +33,6 @@ User.associate(db);
 Comment.associate(db);
 Posting.associate(db);
 PostingImage.associate(db);
+Token.associate(db);
 
 module.exports = db;

@@ -23,11 +23,14 @@ module.exports = class Token extends Sequelize.Model {
             sequelize,
             timestamps: false,
             underscored: false,
-            modelName: 'Tag',
-            tableName: 'tags',
+            modelName: 'Token',
+            tableName: 'tokens',
             paranoid: false,
             charset: 'utf8',
             collate: 'utf8_general_ci',
         });
+    }
+    static associate(db) {
+        db.Token.belongsTo(db.User, {foreignKey: 'user_id', targetKey: 'id'});
     }
 }
