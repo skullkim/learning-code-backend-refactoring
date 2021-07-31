@@ -32,5 +32,6 @@ Token.init(sequelize);
 User.associate(db);
 Comment.associate(db);
 Posting.associate(db);
+PostingImage.associate(db);
 
 module.exports = db;

@@ -22,4 +22,7 @@ module.exports = class PostingImage extends Sequelize.Model {
             collate: 'utf8_general_ci',
         });
     }
+    static associate(db) {
+        db.PostingImage.belongsTo(db.Posting, {foreignKey: 'post_id', targetKey: 'id'});
+    }
 }
