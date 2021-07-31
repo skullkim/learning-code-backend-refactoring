@@ -29,4 +29,7 @@ PostingImage.init(sequelize);
 Tag.init(sequelize);
 Token.init(sequelize);
 
+User.associate(db);
+Comment.associate(db);
+
 module.exports = db;
