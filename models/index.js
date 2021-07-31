@@ -34,5 +34,6 @@ Comment.associate(db);
 Posting.associate(db);
 PostingImage.associate(db);
 Token.associate(db);
+Tag.associate(db);
 
 module.exports = db;
