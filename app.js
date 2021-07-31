@@ -1,5 +1,15 @@
 const express = require('express');
+const dotenv = require('dotenv');
+
+const {sequelize} = require('./models');
+
 const app = express();
+
+dotenv.config();
+
+sequelize.sync({force:false})
+    .then(() => console.log('success to connect DB'))
+    .catch((err) => console.error(err));
 
 app.set('port', process.env.PORT || 8080);
 
