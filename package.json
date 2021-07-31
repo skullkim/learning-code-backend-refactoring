@@ -1,0 +1,26 @@
+{
+  "name": "learning_code_backend",
+  "version": "1.0.0",
+  "description": "- - - ## Project name - - - Learning code - - - ##Description A website to share programming knowledge - - - ## Goal   I made this project to learn react, API server. ## License  This project is licensed under the terms of the MIT license.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skullkim/learning-code-backend-refactoring.git"
+  },
+  "author": "iskull",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/skullkim/learning-code-backend-refactoring/issues"
+  },
+  "homepage": "https://github.com/skullkim/learning-code-backend-refactoring#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
+  }
+}
