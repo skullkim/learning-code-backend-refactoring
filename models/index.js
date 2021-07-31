@@ -4,6 +4,7 @@ const Comment = require('./comments');
 const Posting = require('./postings');
 const PostingImage = require('./postingImage');
 const Tag = require('./Tag');
+const Token = require('./Token');
 
 const env = process.env.NODE_DEV || 'development';
 const config = require('../config/config')[env];
@@ -19,11 +20,13 @@ db.Comment = Comment;
 db.Posting = Posting;
 db.PostingImage =  PostingImage;
 db.Tag = Tag;
+db.Token = Token;
 
 User.init(sequelize);
 Comment.init(sequelize);
 Posting.init(sequelize);
 PostingImage.init(sequelize);
 Tag.init(sequelize);
+Token.init(sequelize);
 
 module.exports = db;
