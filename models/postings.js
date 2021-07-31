@@ -39,6 +39,7 @@ module.exports = class Posting extends Sequelize.Model {
         db.Posting.belongsTo(db.User, {foreignKey: 'author', targetKey: 'id'});
         db.Posting.hasMany(db.Comment, {foreignKey: 'posting_id', sourceKey: 'id'});
         db.Posting.hasMany(db.PostingImage, {foreignKey: 'post_id', sourceKey: 'id'});
+        db.Posting.belongsToMany(db.Tag, {through: 'PostTag'});
     }
 
 }

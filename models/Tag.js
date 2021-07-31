@@ -18,4 +18,7 @@ module.exports = class Tag extends Sequelize.Model {
             collate: 'utf8_general_ci',
         });
     }
+    static associate(db) {
+        db.Tag.belongsToMany(db.Posting, {through: 'PostTage'});
+    }
 }
