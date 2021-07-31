@@ -4,7 +4,13 @@ const app = express();
 app.set('port', process.env.PORT || 8080);
 
 app.get('/', (req, res, next) => {
-    res.send('hi');
+    res.setHeader('Content-Type', 'application/vnd.api+json');
+    res.status(200);
+    res.json({
+       "data": {
+           "tmp": "tmp"
+       }
+    });
 });
 
 app.use((req, res, next) => {
