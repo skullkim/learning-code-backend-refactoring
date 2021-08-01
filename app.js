@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const User = require('./models/users');
 const {Op} = require('sequelize');
+const CircularJson = require('circular-json');
 
 const {sequelize} = require('./models');
 
@@ -17,12 +18,28 @@ app.set('port', process.env.PORT || 8080);
 
 app.get('/', async (req, res, next) => {
     try{
+        const {url, method, params, query, headers:{host, accept}} = req;
        const users = await User.findAll({
            where: {id: {[Op.gt]: 0}},
        });
-       res.setHeader('Content-Type', 'application/json');
+       res.setHeader('Content-Type', 'application/vnd.api+json');
        res.status(200);
-       res.json(users);
+       const res_json = {
+           status: '200',
+           statusText: 'OK',
+           request: {
+             url,
+             method,
+               headers: {
+                 host,
+                   accept
+               },
+             params,
+             query,
+           },
+           data: users
+       }
+       res.json(res_json);
     }
     catch(err){
         console.error(err);
