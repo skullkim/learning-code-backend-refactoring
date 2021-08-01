@@ -1,5 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const User = require('./models/users');
+const {Op} = require('sequelize');
 
 const {sequelize} = require('./models');
 
@@ -13,8 +15,18 @@ sequelize.sync({force:false})
 
 app.set('port', process.env.PORT || 8080);
 
-app.get('/', (req, res, next) => {
-    res.send('hi');
+app.get('/', async (req, res, next) => {
+    try{
+       const users = await User.findAll({
+           where: {id: {[Op.gt]: 0}},
+       });
+       res.setHeader('Content-Type', 'application/json');
+       res.status(200);
+       res.json(users);
+    }
+    catch(err){
+        console.error(err);
+    }
 });
 
 app.use((req, res, next) => {
