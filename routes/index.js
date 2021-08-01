@@ -1,20 +1,25 @@
 const express = require('express');
-const {Op} = require('sequelize');
 
-const User = require('../models/users');
 const {jsonResponse} = require('../lib/jsonResponse');
 
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
+router.get('/main-page-images', async (req, res, next) => {
     try{
-        //const {url, method, params, query, headers:{host, accept}} = req;
-        const users = await User.findAll({
-            where: {id: {[Op.gt]: 0}},
-        });
+        const resData = [
+            {
+                img_url: process.env.MAIN_LOGO_KEY
+            },
+            {
+              img_url: process.env.MAIN_IMG2
+            },
+            {
+                img_url: process.env.MAIN_IMG3
+            }
+        ];
         res.setHeader('Content-Type', 'application/vnd.api+json');
         res.status(200);
-        res.json(jsonResponse(req, users));
+        res.json(jsonResponse(req, resData));
     }
     catch(err){
         console.error(err);
