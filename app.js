@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
+const {swaggerUi, specs} = require('./lib/swagger');
 
 const {sequelize} = require('./models');
 
@@ -20,6 +21,7 @@ app.use(express.urlencoded({extended: true}));
 
 const index_router = require('./routes');
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.use('/', index_router);
 
 app.use((req, res, next) => {
