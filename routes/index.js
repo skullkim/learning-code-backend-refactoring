@@ -6,25 +6,6 @@ const {AwsConfig} = require('../lib/awsConfig');
 
 const router = express.Router();
 
-/**
-*   tags:
-*       name: mainPageImage
-*       description: API to display image
-*/
-/**
- * paths:
- *  /main-page-images:
- *      get:
- *          summary: response main page images url
- *          tags: [mainPageImage]
- *          responses:
- *              "200":
- *                  description: The list of image urls
- *                  content:
- *                      application/vnd.api+json:
- *                          schema:
- *                              $ref: '#/components/schema/mainImages'
- */
 router.get('/main-page-images', (req, res, next) => {
     const resData = [
         {
@@ -59,6 +40,5 @@ router.get('/main-page-image/:image', async(req, res, next) => {
     });
 })
 
-router.get('/')
 
 module.exports = router;
