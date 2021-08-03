@@ -7,13 +7,11 @@ const {AwsConfig} = require('../lib/awsConfig');
 const router = express.Router();
 
 /**
-* @swagger
 *   tags:
 *       name: mainPageImage
 *       description: API to display image
 */
 /**
- * @swagger
  * paths:
  *  /main-page-images:
  *      get:
@@ -27,8 +25,6 @@ const router = express.Router();
  *                          schema:
  *                              $ref: '#/components/schema/mainImages'
  */
-
-
 router.get('/main-page-images', (req, res, next) => {
     const resData = [
         {
