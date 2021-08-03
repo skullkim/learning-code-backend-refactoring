@@ -1,8 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const User = require('./models/users');
-const {Op} = require('sequelize');
-const CircularJson = require('circular-json');
+const morgan = require('morgan');
+const {swaggerUi, specs} = require('./lib/swagger');
 
 const {sequelize} = require('./models');
 
@@ -16,35 +15,14 @@ sequelize.sync({force:false})
 
 app.set('port', process.env.PORT || 8080);
 
-app.get('/', async (req, res, next) => {
-    try{
-        const {url, method, params, query, headers:{host, accept}} = req;
-       const users = await User.findAll({
-           where: {id: {[Op.gt]: 0}},
-       });
-       res.setHeader('Content-Type', 'application/vnd.api+json');
-       res.status(200);
-       const res_json = {
-           status: '200',
-           statusText: 'OK',
-           request: {
-             url,
-             method,
-               headers: {
-                 host,
-                   accept
-               },
-             params,
-             query,
-           },
-           data: users
-       }
-       res.json(res_json);
-    }
-    catch(err){
-        console.error(err);
-    }
-});
+app.use(morgan('dev'));
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+
+const index_router = require('./routes');
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.use('/', index_router);
 
 app.use((req, res, next) => {
     const error = new Error(`${res.method} ${req.url} router doesn't exist`);
