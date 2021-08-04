@@ -1,8 +1,11 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
+const passport = require('passport');
 
 const {sequelize} = require('./models');
+const passportConfig = require('./passport');
 
 const app = express();
 
@@ -17,12 +20,17 @@ app.set('port', process.env.PORT || 8080);
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+app.use(cookieParser());
+app.use(passport.initialize());
+passportConfig();
 
 const index_router = require('./routes');
 const letters_router = require('./routes/letters');
+const auth_router = require('./routes/auth');
 
 app.use('/', index_router);
 app.use('/letters', letters_router);
+app.use('/authentication', auth_router);
 
 app.use((req, res, next) => {
     const error = new Error(`${res.method} ${req.url} router doesn't exist`);
