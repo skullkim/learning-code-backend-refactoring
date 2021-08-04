@@ -8,34 +8,41 @@ const User = require('../models/users');
 
 const router = express.Router();
 
-router.post('/login', async (req, res, next) => {
-    passport.authenticate('local', {session: false}, (err, user, info) => {
-        if(err) {
-            return next(err);
-        }
-        if(!user) {
-            res.setHeader('Content-Type', 'application/vnd.api+json');
-            res.status(401);
-            return res.json(jsonErrorResponse(req, {message: 'incorrect email or password'}, 401, 'Unauthorized'));
-        }
-        const {name, email, login_as, api_id, profile_img_key} = user;
-        const tokenData = {
-            name,
-            email,
-            login_as,
-            api_id,
-            profile_img_key
-        };
-        req.login(user, {session: false}, (loginError) => {
-            if(loginError) {
-                next(loginError);
+router.post('/login/:type', async (req, res, next) => {
+    const {type} = req.params;
+    if(type === 'local') {
+        passport.authenticate('local', {session: false}, (err, user, info) => {
+            if(err) {
+                return next(err);
             }
-            const token = jwt.sign(tokenData, process.env.JWT_SECRET, {expiresIn: "60m"});
-            res.setHeader('Content-Type', 'application/vnd.api+json');
-            res.cookie('learningCodeJwt', token, {httpOnly: true});
-            res.json(jsonResponse(req, {token}));
-        })
-    })(req, res, next);
+            if(!user) {
+                res.setHeader('Content-Type', 'application/vnd.api+json');
+                res.status(401);
+                return res.json(jsonErrorResponse(req, {message: 'incorrect email or password'}, 401, 'Unauthorized'));
+            }
+            const {name, email, login_as, api_id, profile_img_key} = user;
+            const tokenData = {
+                name,
+                email,
+                login_as,
+                api_id,
+                profile_img_key
+            };
+            req.login(user, {session: false}, (loginError) => {
+                if(loginError) {
+                    next(loginError);
+                }
+                const token = jwt.sign(tokenData, process.env.JWT_SECRET, {expiresIn: "60m"});
+                res.setHeader('Content-Type', 'application/vnd.api+json');
+                res.cookie('learningCodeJwt', token, {httpOnly: true});
+                res.json(jsonResponse(req, {token}));
+            })
+        })(req, res, next);
+    }
+    else if(type === 'kakao') {
+        
+    }
+
 });
 
 router.post('/signup', async (req, res, next) => {
