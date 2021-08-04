@@ -1,8 +1,11 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
+const passport = require('passport');
 
 const {sequelize} = require('./models');
+const passportConfig = require('./passport');
 
 const app = express();
 
@@ -17,6 +20,9 @@ app.set('port', process.env.PORT || 8080);
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+app.use(cookieParser());
+app.use(passport.initialize());
+passportConfig();
 
 const index_router = require('./routes');
 const letters_router = require('./routes/letters');
