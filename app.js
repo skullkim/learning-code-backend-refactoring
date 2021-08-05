@@ -24,13 +24,15 @@ app.use(cookieParser());
 app.use(passport.initialize());
 passportConfig();
 
-const index_router = require('./routes');
-const letters_router = require('./routes/letters');
-const auth_router = require('./routes/auth');
+const indexRouter = require('./routes');
+const lettersRouter = require('./routes/letters');
+const authRouter = require('./routes/auth');
+const searchRouter = require('./routes/search');
 
-app.use('/', index_router);
-app.use('/letters', letters_router);
-app.use('/authentication', auth_router);
+app.use('/', indexRouter);
+app.use('/letters', lettersRouter);
+app.use('/authentication', authRouter);
+app.use('/search', searchRouter);
 
 app.use((req, res, next) => {
     const error = new Error(`${res.method} ${req.url} router doesn't exist`);
