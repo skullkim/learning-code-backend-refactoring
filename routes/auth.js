@@ -40,7 +40,14 @@ router.post('/login/:type', async (req, res, next) => {
         })(req, res, next);
     }
     else if(type === 'kakao') {
-        
+        passport.authenticate('kakao');
+        router.get('/login/kakao/callback', passport.authenticate('kakao', {
+            failureRedirect: '/login'
+        }), (req, res) => {
+            res.setHeader('Content-Type', 'application/vnd.api+json');
+            res.status(200);
+            return res.json(jsonResponse(req, {message: 'success'}));
+        })
     }
 
 });
@@ -69,6 +76,7 @@ router.post('/signup', async (req, res, next) => {
        if(newUser) {
            res.status(201);
            return res.json(jsonResponse(req, {message: 'success'}, 201, 'Created'));
+
        }
    }
    catch(err) {
