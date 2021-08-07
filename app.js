@@ -29,12 +29,14 @@ const lettersRouter = require('./routes/letters');
 const authRouter = require('./routes/auth');
 const searchRouter = require('./routes/search');
 const letterRouter = require('./routes/letter');
+const userRouter = require('./routes/user');
 
 app.use('/', indexRouter);
 app.use('/letters', lettersRouter);
 app.use('/authentication', authRouter);
 app.use('/search', searchRouter);
 app.use('/letter', letterRouter);
+app.use('/user', userRouter);
 
 app.use((req, res, next) => {
     const error = new Error(`${res.method} ${req.url} router doesn't exist`);
