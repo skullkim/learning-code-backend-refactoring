@@ -18,8 +18,9 @@ router.post('/login', async (req, res, next) => {
             res.status(401);
             return res.json(jsonErrorResponse(req, {message: 'incorrect email or password'}, 401, 'Unauthorized'));
         }
-        const {name, email, login_as, api_id, profile_img_key} = user;
+        const {id, name, email, login_as, api_id, profile_img_key} = user;
         const tokenData = {
+            id,
             name,
             email,
             login_as,
