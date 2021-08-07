@@ -1,6 +1,7 @@
 const express = require('express');
 const {toJson, fromJson} = require('flatted');
 
+const Comment = require('../models/comments');
 const User = require('../models/users');
 const Tag = require('../models/Tag');
 const PostingImages = require('../models/postingImage');
@@ -29,11 +30,15 @@ router.get('/:letterId', async (req, res, next) => {
             where: {id},
         });
         posting.dataValues.author = ex_user.name;
+        const comments = await Comment.findAll({
+            where: {posting_id: letterId}
+        });
         const responseData = {
             "main_data": posting.dataValues,
             "tags" : tag_arr,
             "posting_id" : posting.id,
             "images": imgs,
+            comments,
         };
         let circularJson = jsonResponse(req, responseData);
         JSON.stringify(circularJson, circularStructureToJson());
