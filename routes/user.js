@@ -87,5 +87,21 @@ router.put('/password/:userId', verifyToken, async(req, res, next) => {
     }
 });
 
+router.put('/:userId/comment/:commentId', verifyToken, async (req, res, next) => {
+    try {
+       const {commentId} = req.params;
+       const {newComment} = req.body;
+       await Comment.update(
+           {comment: newComment},
+           {where: {id: commentId}}
+       );
+       res.contentType('application/vnd.api+json');
+       res.status(201);
+       res.json(jsonResponse(req, {message: 'success'}, 201, 'created'));
+    }
+    catch(err) {
+        next(err);
+    }
+})
 
 module.exports = router;
