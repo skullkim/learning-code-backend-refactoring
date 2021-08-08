@@ -25,6 +25,7 @@ router.get('/profile/:userId', verifyToken, async (req, res, next) => {
         const resComments = comments.map(({dataValues:{id, comment}}) => ({id, comment}));
         const responseData = {
             name,
+            profile_img: `/user/profile-image/${userId}`,
             postings: resPostings,
             comments: resComments
         };
