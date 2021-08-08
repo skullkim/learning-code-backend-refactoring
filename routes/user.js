@@ -40,10 +40,11 @@ router.get('/profile/:userId', verifyToken, async (req, res, next) => {
 
 router.get('/profile-image/:userId', verifyToken, (req, res, next) => {
    const {profile_img_key} = req.decoded;
+   const imgKey = profile_img_key || process.env.DEFAULT_PROFILE_IMG_KEY;
    const s3 = new AWS.S3();
    s3.getObject({
        Bucket: `${process.env.AWS_S3_BUCKET}`,
-       Key: `${profile_img_key}`,
+       Key: `${imgKey}`,
    }, (err, data) => {
        if(err) {
            next(err);
@@ -102,6 +103,6 @@ router.put('/:userId/comment/:commentId', verifyToken, async (req, res, next) =>
     catch(err) {
         next(err);
     }
-})
+});
 
 module.exports = router;
