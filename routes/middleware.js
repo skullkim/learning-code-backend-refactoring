@@ -14,10 +14,10 @@ exports.verifyToken = async (req, res, next) => {
         if(err.name === 'TokenExpiredError') {
             res.setHeader('Content-Type', 'application/vnd.api+json');
             res.status(403);
-            return res.json(jsonErrorResponse(req, RESPONSE_ENUM[4], 403, 'Forbidden'));
+            return res.json(jsonErrorResponse(req, {message: 'token expired'}, 403, 'Forbidden'));
         }
         res.setHeader('Content-Type', 'application/vnd.api+json');
         res.status(401);
-        return res.json(jsonErrorResponse(req, RESPONSE_ENUM[3], 401, 'Unauthorized'));
+        return res.json(jsonErrorResponse(req, {message: 'invalid token'}, 401, 'Unauthorized'));
     }
 }

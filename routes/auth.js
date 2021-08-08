@@ -34,7 +34,7 @@ router.post('/login', async (req, res, next) => {
             const token = jwt.sign(tokenData, process.env.JWT_SECRET, {expiresIn: "60m"});
             res.setHeader('Content-Type', 'application/vnd.api+json');
             res.cookie('learningCodeJwt', token, {httpOnly: true});
-            res.json(jsonResponse(req, {token}));
+            res.json(jsonResponse(req, {user_id: id, token}));
         })
     })(req, res, next);
 });
