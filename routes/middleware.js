@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+const AWS = require('aws-sdk');
+const path = require('path');
 
-const {jsonErrorResponse, RESPONSE_ENUM} = require('../lib/jsonResponse');
+const {jsonErrorResponse} = require('../lib/jsonResponse');
 
 exports.verifyToken = async (req, res, next) => {
     try {
@@ -20,4 +24,15 @@ exports.verifyToken = async (req, res, next) => {
         res.status(401);
         return res.json(jsonErrorResponse(req, {message: 'invalid token'}, 401, 'Unauthorized'));
     }
-}
+};
+
+exports.uploadProfileImage = multer({
+    storage: multerS3({
+        s3: new AWS.S3(),
+        bucket: `${process.env.AWS_S3_BUCKET}`,
+        key(req, file, done) {
+            const ext = path.extname(file.originalname);
+            done(null, `upload/posting/${path.basename(file.originalname, ext) + Date.now()} + ext`);
+        }
+    })
+});

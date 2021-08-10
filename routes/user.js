@@ -1,9 +1,10 @@
 const express = require('express');
 const AWS = require('aws-sdk');
 const bcrypt = require('bcrypt');
+const sequelize = require('sequelize');
 
 const {AwsConfig} = require('../lib/awsConfig');
-const {verifyToken} = require('./middleware');
+const {verifyToken, uploadProfileImage} = require('./middleware');
 const {jsonResponse, jsonErrorResponse} = require('../lib/jsonResponse');
 const Posting = require('../models/postings');
 const Comment = require('../models/comments');
@@ -11,7 +12,7 @@ const User = require('../models/users');
 
 const router = express.Router();
 
-router.get('/profile/:userId', verifyToken, async (req, res, next) => {
+router.get('/:userId/profile', verifyToken, async (req, res, next) => {
     try {
         const {userId} = req.params;
         const {name} = req.decoded;
@@ -38,7 +39,62 @@ router.get('/profile/:userId', verifyToken, async (req, res, next) => {
     }
 });
 
-router.get('/profile-image/:userId', verifyToken, (req, res, next) => {
+router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileImage'), async (req, res, next) => {
+    try {
+        const {id, login_as, profile_key} = req.decoded;
+        const {name, email} = req.body;
+        if(name) {
+            const exName = await User.findOne({
+                where: {name},
+            });
+            if(exName) {
+                res.contentType('application/vnd.api+json');
+                res.status(400);
+                return res.json(jsonErrorResponse(req, {message: `same name exist`}));
+            }
+            await User.update(
+                {name},
+                {where: {id}}
+            );
+        }
+        if(email) {
+            const exEmail = await User.findOne({
+                where: {email},
+            });
+            if(exEmail) {
+                res.contentType('application/vnd.api+json');
+                res.status(400);
+                return res.json(jsonErrorResponse(req, {message: `same email exist`}));
+            }
+            await User.update(
+                {email},
+                {where: {id}}
+            );
+        }
+        if(req.file) {
+            const {location, key} = req.file;
+            await User.update(
+                {profile_key: `${key}`},
+                {where: {id}}
+            );
+            const s3 = new AWS.S3();
+            s3.deleteObject({
+                Bucket: `${process.env.AWS_S3_BUCKET}`,
+                Key: `${profile_key}`,
+            }, (err, data) => {
+                err ? console.error(err) : console.log('local profile image deleted');
+            })
+        }
+        res.contentType('application/vnd.api+json');
+        res.status(201);
+        return res.json(jsonResponse(req, {message: 'success'}, 201, 'create'));
+    }
+    catch(err) {
+        next(err);
+    }
+});
+
+router.get('/:userId/profile-image', verifyToken, (req, res, next) => {
    const {profile_img_key} = req.decoded;
    const imgKey = profile_img_key || process.env.DEFAULT_PROFILE_IMG_KEY;
    const s3 = new AWS.S3();
@@ -58,7 +114,7 @@ router.get('/profile-image/:userId', verifyToken, (req, res, next) => {
 });
 
 
-router.put('/password/:userId', verifyToken, async(req, res, next) => {
+router.put('/:userId/password', verifyToken, async(req, res, next) => {
     try{
        const {userId} = req.params;
        const {prevPassword, newPassword} = req.body;
@@ -104,5 +160,6 @@ router.put('/:userId/comment/:commentId', verifyToken, async (req, res, next) =>
         next(err);
     }
 });
+
 
 module.exports = router;
