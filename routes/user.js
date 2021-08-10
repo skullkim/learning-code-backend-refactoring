@@ -1,7 +1,7 @@
 const express = require('express');
 const AWS = require('aws-sdk');
 const bcrypt = require('bcrypt');
-const sequelize = require('sequelize');
+const Op = require('sequelize').Op;
 
 const {AwsConfig} = require('../lib/awsConfig');
 const {verifyToken, uploadProfileImage} = require('./middleware');
@@ -160,6 +160,24 @@ router.put('/:userId/comment/:commentId', verifyToken, async (req, res, next) =>
         next(err);
     }
 });
+
+router.delete ('/:userId/comment/:commentId', verifyToken, async (req, res, next) => {
+    try {
+        const {userId, commentId} = req.params;
+        await Comment.destroy({
+            where: {[Op.and]: [
+                    {id: commentId},
+                    {commenter_id: userId},
+                ]},
+        });
+        res.contentType('application/vnd.api+json');
+        res.status(200);
+        res.json(jsonResponse(req, {message: 'success'}));
+    }
+    catch(err) {
+        next(err);
+    }
+})
 
 
 module.exports = router;
