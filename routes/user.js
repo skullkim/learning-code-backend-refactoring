@@ -183,9 +183,12 @@ router.delete ('/:userId/comment/:commentId', verifyToken, async (req, res, next
 
 router.get('/:userId/posting/:postingId', verifyToken, async (req, res, next) => {
     try {
-        const {postingId} = req.params;
+        const {userId, postingId} = req.params;
         const posting = await Posting.findOne({
-            where: {id: postingId},
+            where: {[Op.and]: [
+                    {id: postingId},
+                    {author: userId}
+                ]},
         });
         const tags = await posting.getTags();
         const selectedTags = tags.map(({tag}) => tag);
@@ -209,5 +212,7 @@ router.get('/:userId/posting/:postingId', verifyToken, async (req, res, next) =>
         next(err);
     }
 })
+
+router.put()
 
 module.exports = router;
