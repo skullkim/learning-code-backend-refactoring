@@ -189,10 +189,10 @@ router.get('/:userId/posting/:postingId', verifyToken, async (req, res, next) =>
         });
         const tags = await posting.getTags();
         const selectedTags = tags.map(({tag}) => tag);
-        const hasImage = await PostingImages.findAll({
+        const images = await PostingImages.findAll({
+            attributes: ['id'],
             where: {post_id: postingId}
         });
-        const images = hasImage ? `/letter/images/${postingId}` : [];
         const categories = getCategories();
         const resData = {
             posting,

@@ -1,4 +1,5 @@
 const express = require('express');
+const AWS = require('aws-sdk');
 const {toJson, fromJson} = require('flatted');
 
 const Comment = require('../models/comments');
@@ -52,5 +53,30 @@ router.get('/:letterId', async (req, res, next) => {
     }
 });
 
+router.get('/:letterId/images/:imageId', async (req, res, next) => {
+    try {
+        const {letterId, imageId} = req.params;
+        const s3Key = await PostingImages.findOne({
+            attributes: ['img_key'],
+            where: {id: imageId},
+        });
+        const s3 = new AWS.S3();
+        s3.getObject({
+            Bucket: `${process.env.AWS_S3_BUCKET}`,
+            Key: `${s3Key.img_key}`,
+        }, (err, data) => {
+            if(err) {
+                console.log(err);
+            }
+            else{
+                res.write(data.Body, 'binary');
+                res.end(null, 'binary');
+            }
+        })
+    }
+    catch(err) {
+        next(err);
+    }
+})
 
 module.exports = router;
