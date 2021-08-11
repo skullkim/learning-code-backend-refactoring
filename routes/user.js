@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const Op = require('sequelize').Op;
 
 const {AwsConfig} = require('../lib/awsConfig');
-const {verifyToken, uploadProfileImage} = require('./middleware');
+const {verifyToken, uploadProfileImage, uploadPostingImages} = require('./middleware');
 const {jsonResponse, jsonErrorResponse} = require('../lib/jsonResponse');
 const {getCategories} = require('../lib/category');
 const Posting = require('../models/postings');
@@ -213,6 +213,72 @@ router.get('/:userId/posting/:postingId', verifyToken, async (req, res, next) =>
     }
 })
 
-router.put()
+router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array('imgs'), async (req, res, next) => {
+    try {
+        const {userId, postingId} = req.params;
+        const {title, posting, category, tags} = req.body;
+        await Posting.update(
+            {title, main_posting: posting, main_category: category},
+            {where: {[Op.and]: [{id: postingId}, {author: userId}]}}
+        );
+        const exPosting = await Posting.findOne({
+            where: {title}
+        });
+        const prevTags = await exPosting.getTags();
+        if(prevTags && tags){
+            await Promise.all(
+                prevTags.map((tag) => {
+                    posting.removeTag(tag.id);
+                })
+            );
+            if(typeof tags === "object"){
+                const result = await Promise.all(
+                    tags.map((tag) => {
+                        return Tag.create({
+                            tag
+                        });
+                    })
+                );
+                await posting.addTags(result.map(r => r.id));
+            }
+            else{
+                const result = await Tag.create({
+                    tag: tags,
+                });
+                await posting.addTags(result);
+            }
+        }
+        const images = req.files;
+        if(images) {
+            const prevImgs = await PostingImages.findAll({
+                attributes: ['img_key'],
+                where: {post_id: postingId},
+            });
+            const s3 = new AWS.S3();
+            prevImgs.map((img) => {
+                s3.deleteObject({
+                    Bucket: `${process.env.AWS_S3_BUCKET}`,
+                    Key: `${img.datavalues.img_key}`,
+                }, (err, data) => {
+                    err ? console.error(err) : console.log('delete image success');
+                });
+            });
+            await PostingImages.destroy({
+                where: {post_id: postingId},
+            });
+            await Promise.all(
+                images.map((img) => {
+                    PostingImages.create({
+                        post_id: postingId,
+                        img_key: img.key
+                    });
+                })
+            );
+        }
+    }
+    catch(err) {
+        next(err);
+    }
+});
 
 module.exports = router;

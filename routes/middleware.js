@@ -36,3 +36,14 @@ exports.uploadProfileImage = multer({
         }
     })
 });
+
+exports.uploadPostingImages = multer({
+    storage: multerS3({
+        s3: new AWS.S3(),
+        bucket: `${process.env.AWS_S3_BUCKET}`,
+        key(req, file, done) {
+            const ext = path.extname(file.originalname);
+            done(null, `upload/posting/${path.basename(file.originalname, ext) + Date.now() + ext}`);
+        }
+    })
+});
