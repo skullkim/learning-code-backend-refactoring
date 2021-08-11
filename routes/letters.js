@@ -5,6 +5,7 @@ const path = require('path');
 
 const Posting = require('../models/postings');
 const {jsonResponse} = require('../lib/jsonResponse');
+const {getCategories} = require('../lib/category');
 
 const router = express.Router();
 
@@ -22,14 +23,16 @@ router.get('/', async(req, res, next) => {
 
 router.get('/categories', async (req, res, next) => {
     try {
-       const readFile = util.promisify(fs.readFile);
-       const categories = await readFile(path.join(__dirname, '../lib/category.json'));
+       // const readFile = util.promisify(fs.readFile);
+       // const categories = await readFile(path.join(__dirname, '../lib/category.js'));
+       const categories = getCategories();
        res.setHeader('Content-Type', 'application/vnd.api+json');
        res.status(200);
        const res_data = JSON.parse(categories);
        res.json(jsonResponse(req, res_data));
     }
     catch(err) {
+        console.log(err);
         next(err);
     }
 });

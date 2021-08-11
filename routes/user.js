@@ -6,9 +6,11 @@ const Op = require('sequelize').Op;
 const {AwsConfig} = require('../lib/awsConfig');
 const {verifyToken, uploadProfileImage} = require('./middleware');
 const {jsonResponse, jsonErrorResponse} = require('../lib/jsonResponse');
+const {getCategories} = require('../lib/category');
 const Posting = require('../models/postings');
 const Comment = require('../models/comments');
 const User = require('../models/users');
+const PostingImages = require('../models/postingImage');
 
 const router = express.Router();
 
@@ -179,5 +181,33 @@ router.delete ('/:userId/comment/:commentId', verifyToken, async (req, res, next
     }
 })
 
+router.get('/:userId/posting/:postingId', verifyToken, async (req, res, next) => {
+    try {
+        const {postingId} = req.params;
+        const posting = await Posting.findOne({
+            where: {id: postingId},
+        });
+        const tags = await posting.getTags();
+        const selectedTags = tags.map(({tag}) => tag);
+        const hasImage = await PostingImages.findAll({
+            where: {post_id: postingId}
+        });
+        const images = hasImage ? `/letter/images/${postingId}` : [];
+        const categories = getCategories();
+        const resData = {
+            posting,
+            selectedTags,
+            categories,
+            images,
+        }
+        const circularJson = jsonResponse(req, resData);
+        res.contentType('application/vnd.api+json');
+        res.status(200);
+        res.json(circularJson);
+    }
+    catch(err) {
+        next(err);
+    }
+})
 
 module.exports = router;
