@@ -11,6 +11,7 @@ const Posting = require('../models/postings');
 const Comment = require('../models/comments');
 const User = require('../models/users');
 const PostingImages = require('../models/postingImage');
+const Tag = require('../models/Tag');
 
 const router = express.Router();
 
@@ -228,7 +229,7 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
         if(prevTags && tags){
             await Promise.all(
                 prevTags.map((tag) => {
-                    posting.removeTag(tag.id);
+                    exPosting.removeTag(tag.id);
                 })
             );
             if(typeof tags === "object"){
@@ -239,13 +240,13 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
                         });
                     })
                 );
-                await posting.addTags(result.map(r => r.id));
+                await exPosting.addTags(result.map(r => r.id));
             }
             else{
                 const result = await Tag.create({
                     tag: tags,
                 });
-                await posting.addTags(result);
+                await exPosting.addTags(result);
             }
         }
         const images = req.files;
@@ -275,6 +276,9 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
                 })
             );
         }
+        res.contentType('application/vnd.api+json');
+        res.status(201);
+        res.json(jsonResponse(req, {message: 'success'}, 201, 'create'));
     }
     catch(err) {
         next(err);
