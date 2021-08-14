@@ -10,7 +10,7 @@ const {getCategories} = require('../lib/category');
 const Posting = require('../models/postings');
 const Comment = require('../models/comments');
 const User = require('../models/users');
-const PostingImages = require('../models/postingImage');
+const PostingImage = require('../models/postingImage');
 const Tag = require('../models/Tag');
 
 const router = express.Router();
@@ -284,5 +284,56 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
         next(err);
     }
 });
+
+router.delete('/:userId/posting/:postingId', verifyToken, async (req, res, next) => {
+    try {
+        const {userId, postingId} = req.params;
+        const {id} = req.decoded;
+        const exPosting = await Posting.findOne({
+            where: {
+                [Op.and]: [
+                    {author: id},
+                    {id: postingId},
+                ]
+            }
+        });
+        if(!exPosting) {
+            res.contentType('application/vnd.api+json');
+            res.status(400);
+            return res.json(jsonErrorResponse(req, {message: `posting doesn't exist`}, 400, 'Bad Request'));
+        }
+        const tags = await exPosting.getTags();
+        if(tags) {
+            await Promise.all(
+                tags.map((tag) => exPosting.removeTag(tag.id))
+            );
+        }
+        const postingImages = await PostingImage.findAll({
+            where: {post_id: postingId},
+        });
+        if(postingImages) {
+            await PostingImage.destroy({
+                where: {post_id: id},
+            });
+        }
+        await Comment.destroy({
+            where: {posting_id: id},
+        });
+        await Posting.destroy({
+            where: {
+                [Op.and]: [
+                    {author: id},
+                    {id: postingId},
+                ]
+            }
+        });
+        res.contentType('application/vnd.api+json');
+        res.status(200);
+        return res.json(jsonResponse(req, {message: 'success'}));
+    }
+    catch(err) {
+        next(err);
+    }
+})
 
 module.exports = router;
