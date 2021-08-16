@@ -40,5 +40,25 @@ router.get('/main-page-image/:image', async(req, res, next) => {
     });
 })
 
+router.get('/header', (req, res, next) => {
+    const resData = {
+        "search" : ["제목", "카테고리", "도서"],
+        "logo": "/main-page-image/footer-logo"
+    };
+    res.contentType('application/vnd.api+json');
+    res.status(200);
+    res.json(jsonResponse(req, resData));
+});
+
+router.get('/footer', (req, res, next) => {
+    const resData = {
+        "developer": "skullkim",
+        "github": "https://github.com/skullkim",
+        "logo": "/main-page-image/footer-logo"
+    };
+    res.contentType('application/vnd.api+json');
+    res.status(200);
+    res.json(jsonResponse(req, resData));
+})
 
 module.exports = router;
