@@ -334,6 +334,55 @@ router.delete('/:userId/posting/:postingId', verifyToken, async (req, res, next)
     catch(err) {
         next(err);
     }
-})
+});
+
+router.post('/:userId/posting', verifyToken, uploadPostingImages.array('imgs'), async (req, res, next) => {
+    try {
+        const {id} = req.decoded;
+        const {title, posting, category, tags} = req.body;
+        const newPosting = await Posting.create({
+            author: id,
+            title,
+            main_posting: posting,
+            main_category: category,
+        });
+        const {dataValues: newPostingInfo} = newPosting;
+        const images = req.files;
+        if(images) {
+            await Promise.all(
+                images.map((img) => {
+                    PostingImage.create({
+                        post_id: newPostingInfo.id,
+                        img_key: img.key,
+                    });
+                })
+            );
+        }
+        if(tags) {
+            if(typeof tags === 'object') {
+                const result = await Promise.all(
+                    tags.map(tag => {
+                        return Tag.create({
+                            tag,
+                        });
+                    })
+                );
+                await newPosting.addTags(result.map(r => r.id));
+            }
+            else {
+                const result = await Tag.create({
+                    tag: tags,
+                });
+                await newPosting.addTags(result);
+            }
+        }
+        res.contentType('application/vnd.api+json');
+        res.status(201);
+        res.json(jsonResponse(req, {message: 'success'}, 201, 'created'));
+    }
+    catch(err) {
+        next(err);
+    }
+});
 
 module.exports = router;
