@@ -1,4 +1,5 @@
 const express = require('express');
+const AWS = require('aws-sdk');
 const {toJson, fromJson} = require('flatted');
 
 const Comment = require('../models/comments');
@@ -7,6 +8,7 @@ const Tag = require('../models/Tag');
 const PostingImages = require('../models/postingImage');
 const Posting = require('../models/postings');
 const {jsonResponse} = require('../lib/jsonResponse');
+const circularStructureToJson = require('../lib/circularJson');
 
 const router = express.Router();
 
@@ -51,15 +53,30 @@ router.get('/:letterId', async (req, res, next) => {
     }
 });
 
-const circularStructureToJson = () => {
-    const visited = new WeakSet();
-    return (key, value) => {
-        if(typeof value === 'object' && value !== null) {
-            if(visited.has(value)) return;
-            visited.add(value);
-        }
-        return value;
-    };
-};
+router.get('/:letterId/images/:imageId', async (req, res, next) => {
+    try {
+        const {letterId, imageId} = req.params;
+        const s3Key = await PostingImages.findOne({
+            attributes: ['img_key'],
+            where: {id: imageId},
+        });
+        const s3 = new AWS.S3();
+        s3.getObject({
+            Bucket: `${process.env.AWS_S3_BUCKET}`,
+            Key: `${s3Key.img_key}`,
+        }, (err, data) => {
+            if(err) {
+                console.log(err);
+            }
+            else{
+                res.write(data.Body, 'binary');
+                res.end(null, 'binary');
+            }
+        })
+    }
+    catch(err) {
+        next(err);
+    }
+})
 
 module.exports = router;

@@ -18,8 +18,9 @@ router.post('/login', async (req, res, next) => {
             res.status(401);
             return res.json(jsonErrorResponse(req, {message: 'incorrect email or password'}, 401, 'Unauthorized'));
         }
-        const {name, email, login_as, api_id, profile_img_key} = user;
+        const {id, name, email, login_as, api_id, profile_img_key} = user;
         const tokenData = {
+            id,
             name,
             email,
             login_as,
@@ -33,7 +34,7 @@ router.post('/login', async (req, res, next) => {
             const token = jwt.sign(tokenData, process.env.JWT_SECRET, {expiresIn: "60m"});
             res.setHeader('Content-Type', 'application/vnd.api+json');
             res.cookie('learningCodeJwt', token, {httpOnly: true});
-            res.json(jsonResponse(req, {token}));
+            res.json(jsonResponse(req, {user_id: id, token}));
         })
     })(req, res, next);
 });
