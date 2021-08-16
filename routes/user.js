@@ -180,6 +180,26 @@ router.delete ('/:userId/comment/:commentId', verifyToken, async (req, res, next
     catch(err) {
         next(err);
     }
+});
+
+router.post('/:userId/posting/:postingId/comment', verifyToken, async (req, res, next) => {
+   try {
+      const {postingId} = req.params;
+      const {comment} = req.body;
+      const {id, name} = req.decoded;
+      await Comment.create({
+          commenter_id: id,
+          commenter: name,
+          posting_id: postingId,
+          comment,
+      });
+      res.contentType('application/vnd.api+json');
+      res.status(201);
+      res.json(jsonResponse(req, {message: 'success'}, 201, 'created'));
+   }
+   catch(err) {
+       next(err);
+   }
 })
 
 router.get('/:userId/posting/:postingId', verifyToken, async (req, res, next) => {
