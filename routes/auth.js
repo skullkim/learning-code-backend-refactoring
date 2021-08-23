@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const {jsonResponse, jsonErrorResponse} = require('../lib/jsonResponse');
 const generateAccessToken = require('../lib/generateAccessToken');
 const User = require('../models/users');
+const Token = require('../models/Token');
 
 const router = express.Router();
 
@@ -28,13 +29,17 @@ router.post('/login', async (req, res, next) => {
             api_id,
             profile_img_key
         };
-        req.login(user, {session: false}, (loginError) => {
+        req.login(user, {session: false}, async (loginError) => {
             if(loginError) {
                 next(loginError);
             }
             //const token = jwt.sign(tokenData, process.env.JWT_SECRET, {expiresIn: "60m"});
             const accessToken = generateAccessToken(tokenData);
             const refreshToken = jwt.sign(tokenData, process.env.JWT_REFRESH_SECRET);
+            await Token.create({
+                user_id: id,
+                local_refresh: refreshToken,
+            });
             res.setHeader('Content-Type', 'application/vnd.api+json');
             res.cookie('learningCodeRefreshJwt', refreshToken, {httpOnly: true});
             res.json(jsonResponse(req, {user_id: id, accessToken}));
@@ -72,5 +77,38 @@ router.post('/signup', async (req, res, next) => {
        next(err);
    }
 });
+
+router.post('/token', async (req, res, next) => {
+    try {
+        const {cookie} = req.headers;
+        const userRefreshToken = cookie.split('=')[1];
+        if(!userRefreshToken) {
+            res.setHeader('Content-Type', 'application/vnd.api+json');
+            res.status(401);
+            return res.json(jsonErrorResponse(req, {message: 'invalid token'}, 401, 'Unauthorized'));
+        }
+        const dbRefreshToken = await Token.findOne({
+            where: {local_refresh: userRefreshToken},
+        });
+        if(!dbRefreshToken) {
+            res.setHeader('Content-Type', 'application/vnd.api+json');
+            res.status(403);
+            return res.json(jsonErrorResponse(req, {message: 'token expired'}, 403, 'Forbidden'));
+        }
+        jwt.verify(userRefreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
+            res.setHeader('Content-Type', 'application/vnd.api+json');
+            if(err) {
+                res.status(403);
+                return res.json(jsonErrorResponse(req, {message: 'token expired'}, 403, 'Forbidden'));
+            }
+            const accessToken = generateAccessToken(user);
+            res.status(201);
+            return res.json(jsonResponse(req, {access_token: accessToken}, 201, 'created'));
+        })
+    }
+    catch(err) {
+        next(err);
+    }
+})
 
 module.exports = router;
