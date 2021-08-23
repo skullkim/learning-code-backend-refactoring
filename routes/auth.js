@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 
 const {jsonResponse, jsonErrorResponse} = require('../lib/jsonResponse');
 const generateAccessToken = require('../lib/generateAccessToken');
+const {verifyToken} = require('./middleware');
 const User = require('../models/users');
 const Token = require('../models/Token');
 
@@ -109,6 +110,23 @@ router.post('/token', async (req, res, next) => {
     catch(err) {
         next(err);
     }
+})
+
+router.delete('/logout', verifyToken, async (req, res, next) => {
+   try {
+       const {cookie} = req.headers;
+       const refreshToken = cookie.split('=')[1];
+       req.logOut();
+       res.clearCookie('learningCodeRefreshJwt');
+       await Token.destroy({
+           where: {local_refresh: refreshToken},
+       });
+       res.status(204);
+       res.end();
+   }
+   catch(err) {
+       next(err);
+   }
 })
 
 module.exports = router;
