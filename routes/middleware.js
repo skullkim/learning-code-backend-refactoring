@@ -9,7 +9,9 @@ const {jsonErrorResponse} = require('../lib/jsonResponse');
 exports.verifyToken = async (req, res, next) => {
     try {
         const {cookie} = req.headers;
-        const token = cookie.split('=')[1];
+        const {authorization} = req.headers;
+        console.log(req.headers);
+        const token = authorization.split(' ')[1];
         req.decoded = await jwt.verify(token, process.env.JWT_SECRET);
         req.data = req.decoded.data;
         next();

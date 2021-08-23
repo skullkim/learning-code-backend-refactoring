@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 const {jsonResponse, jsonErrorResponse} = require('../lib/jsonResponse');
+const generateAccessToken = require('../lib/generateAccessToken');
 const User = require('../models/users');
 
 const router = express.Router();
@@ -31,10 +32,12 @@ router.post('/login', async (req, res, next) => {
             if(loginError) {
                 next(loginError);
             }
-            const token = jwt.sign(tokenData, process.env.JWT_SECRET, {expiresIn: "60m"});
+            //const token = jwt.sign(tokenData, process.env.JWT_SECRET, {expiresIn: "60m"});
+            const accessToken = generateAccessToken(tokenData);
+            const refreshToken = jwt.sign(tokenData, process.env.JWT_REFRESH_SECRET);
             res.setHeader('Content-Type', 'application/vnd.api+json');
-            res.cookie('learningCodeJwt', token, {httpOnly: true});
-            res.json(jsonResponse(req, {user_id: id, token}));
+            res.cookie('learningCodeRefreshJwt', refreshToken, {httpOnly: true});
+            res.json(jsonResponse(req, {user_id: id, accessToken}));
         })
     })(req, res, next);
 });
