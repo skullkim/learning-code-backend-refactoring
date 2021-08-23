@@ -84,11 +84,11 @@ router.get('/:target', async (req, res, next) => {
     else {
         res.contentType('application/vnd.api+json');
         res.status(400);
-        return res.json(jsonErrorResponse(req, {message: 'incorrect target'}));
+        return res.json(jsonErrorResponse(req, [{message: 'incorrect target'}]));
     }
     res.contentType('application/vnd.api+json');
     res.status(200);
-    return res.json(jsonResponse(req, {message: 'no such result'}));
+    return res.json(jsonResponse(req, [{message: 'no such result'}]));
 });
 
 const findBook = async (target) => {
