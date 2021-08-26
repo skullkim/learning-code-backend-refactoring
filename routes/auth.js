@@ -42,7 +42,8 @@ router.post('/login', async (req, res, next) => {
                 local_refresh: refreshToken,
             });
             res.setHeader('Content-Type', 'application/vnd.api+json');
-            res.cookie('learningCodeRefreshJwt', refreshToken, {httpOnly: true});
+            res.setHeader('Access-Control-Allow-Origin', `http://localhost:3000`);
+            res.cookie('learningCodeRefreshJwt', refreshToken, {httpOnly: true, sameSite: "none", secure: true});
             res.json(jsonResponse(req, {user_id: id, accessToken}));
         })
     })(req, res, next);
@@ -114,8 +115,7 @@ router.post('/token', async (req, res, next) => {
 
 router.delete('/logout', verifyToken, async (req, res, next) => {
    try {
-       const {cookie} = req.headers;
-       const refreshToken = cookie.split('=')[1];
+       const refreshToken = req.cookies.learningCodeRefreshJwt;
        req.logOut();
        res.clearCookie('learningCodeRefreshJwt');
        await Token.destroy({
@@ -125,6 +125,7 @@ router.delete('/logout', verifyToken, async (req, res, next) => {
        res.end();
    }
    catch(err) {
+       console.log(err);
        next(err);
    }
 })

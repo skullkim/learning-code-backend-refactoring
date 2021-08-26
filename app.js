@@ -19,7 +19,8 @@ sequelize.sync({force:false})
 app.set('port', process.env.PORT || 8080);
 
 app.use(cors({
-    origin: `${process.env.FRONT_ORIGIN_DEV}`
+    origin: `${process.env.FRONT_ORIGIN_DEV}`,
+    credentials: true,
 }));
 app.use(morgan('dev'));
 app.use(express.json());
