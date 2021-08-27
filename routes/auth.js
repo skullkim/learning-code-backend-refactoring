@@ -49,6 +49,32 @@ router.post('/login', async (req, res, next) => {
     })(req, res, next);
 });
 
+router.put('/password', async (req, res, next) => {
+    try {
+        const {email, password} = req.body;
+        const exUser = await User.findOne({
+            where: {email},
+        });
+        res.setHeader('Content-Types', 'application/vnd.api+json');
+        if(!exUser) {
+            res.status(400);
+            return res.json(jsonErrorResponse(req, {message: '가입되지 않은 이메일 입니다'}));
+        }
+        const hashedPasswd = await bcrypt.hash(password, 12);
+        await User.update(
+            {
+                password: hashedPasswd,
+            },
+            {where: {email}},
+        );
+        res.status(200);
+        return res.json(jsonResponse(req, {message: 'success'}));
+    }
+    catch(err) {
+        next(err);
+    }
+})
+
 router.post('/signup', async (req, res, next) => {
    try{
        const {name, password, email} = req.body;
