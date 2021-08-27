@@ -60,7 +60,7 @@ router.post('/signup', async (req, res, next) => {
        });
        res.setHeader('Content-Type', 'application/vnd.api+json');
        if(exName || exEmail) {
-           const error = exName ? 'same name exist' : 'same email exist';
+           const error = exName ? '사용중인 닉네임입니다' : '사용중인 이메일입니다';
            res.status(400);
            return res.json(jsonErrorResponse(req, {message: `${error}`}));
        }
