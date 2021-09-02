@@ -31,7 +31,7 @@ router.get('/:userId/profile', verifyToken, async (req, res, next) => {
         const resComments = comments.map(({dataValues:{id, comment}}) => ({id, comment}));
         const responseData = {
             name,
-            profile_img: `/user/profile-image/${userId}`,
+            profile_img: `/user/${userId}/profile-image`,
             postings: resPostings,
             comments: resComments
         };
@@ -97,23 +97,33 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
     }
 });
 
-router.get('/:userId/profile-image', verifyToken, (req, res, next) => {
-   const {profile_img_key} = req.decoded;
-   const imgKey = profile_img_key || process.env.DEFAULT_PROFILE_IMG_KEY;
-   const s3 = new AWS.S3();
-   s3.getObject({
-       Bucket: `${process.env.AWS_S3_BUCKET}`,
-       Key: `${imgKey}`,
-   }, (err, data) => {
-       if(err) {
-           next(err);
-       }
-       else {
-           res.setHeader('Content-Type', 'image/png');
-           res.write(data.Body, 'binary');
-           res.end(null, 'binary');
-           }
-       });
+router.get('/:userId/profile-image', async (req, res, next) => {
+    try {
+        const {userId} = req.params;
+        const exUser = await User.findOne({
+            where: {id: userId}
+        });
+        const {profile_img_key} = exUser;
+        const imgKey = profile_img_key || process.env.DEFAULT_PROFILE_IMG_KEY;
+        const s3 = new AWS.S3();
+        s3.getObject({
+            Bucket: `${process.env.AWS_S3_BUCKET}`,
+            Key: `${imgKey}`,
+        }, (err, data) => {
+            if(err) {
+                console.log(err);
+                next(err);
+            }
+            else {
+                res.setHeader('Content-Type', 'image/png');
+                res.write(data.Body, 'binary');
+                res.end(null, 'binary');
+            }
+        });
+    }
+    catch(err) {
+        next(err);
+    }
 });
 
 
@@ -360,6 +370,7 @@ router.post('/:userId/posting', verifyToken, uploadPostingImages.array('imgs'), 
     try {
         const {id} = req.decoded;
         const {title, posting, category, tags} = req.body;
+        const tagsArr = tags.split(',');
         const newPosting = await Posting.create({
             author: id,
             title,
@@ -378,10 +389,10 @@ router.post('/:userId/posting', verifyToken, uploadPostingImages.array('imgs'), 
                 })
             );
         }
-        if(tags) {
-            if(typeof tags === 'object') {
+        if(tagsArr) {
+            if(typeof tagsArr === 'object') {
                 const result = await Promise.all(
-                    tags.map(tag => {
+                    tagsArr.map(tag => {
                         return Tag.create({
                             tag,
                         });
@@ -401,6 +412,7 @@ router.post('/:userId/posting', verifyToken, uploadPostingImages.array('imgs'), 
         res.json(jsonResponse(req, {message: 'success'}, 201, 'created'));
     }
     catch(err) {
+        console.log(err);
         next(err);
     }
 });

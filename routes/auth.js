@@ -106,10 +106,14 @@ router.post('/signup', async (req, res, next) => {
    }
 });
 
+router.post('/logged-in', verifyToken, (req, res, next) => {
+    res.status(204);
+    res.end();
+});
+
 router.post('/token', async (req, res, next) => {
     try {
-        const {cookie} = req.headers;
-        const userRefreshToken = cookie.split('=')[1];
+        const {learningCodeRefreshJwt: userRefreshToken} = req.cookies;
         if(!userRefreshToken) {
             res.setHeader('Content-Type', 'application/vnd.api+json');
             res.status(401);
@@ -125,11 +129,12 @@ router.post('/token', async (req, res, next) => {
         }
         jwt.verify(userRefreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
             res.setHeader('Content-Type', 'application/vnd.api+json');
+            const {iat, ...exUser} = user;
             if(err) {
                 res.status(403);
                 return res.json(jsonErrorResponse(req, {message: 'token expired'}, 403, 'Forbidden'));
             }
-            const accessToken = generateAccessToken(user);
+            const accessToken = generateAccessToken(exUser);
             res.status(201);
             return res.json(jsonResponse(req, {access_token: accessToken}, 201, 'created'));
         })
@@ -151,7 +156,6 @@ router.delete('/logout', verifyToken, async (req, res, next) => {
        res.end();
    }
    catch(err) {
-       console.log(err);
        next(err);
    }
 })

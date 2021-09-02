@@ -12,6 +12,7 @@ exports.verifyToken = async (req, res, next) => {
         const {authorization} = req.headers;
         // console.log(req.headers);
         const token = authorization.split(' ')[1];
+        console.log(1111, token);
         req.decoded = await jwt.verify(token, process.env.JWT_SECRET);
         req.data = req.decoded.data;
         next();
@@ -46,6 +47,6 @@ exports.uploadPostingImages = multer({
         key(req, file, done) {
             const ext = path.extname(file.originalname);
             done(null, `upload/posting/${path.basename(file.originalname, ext) + Date.now() + ext}`);
-        }
+        },
     })
 });
