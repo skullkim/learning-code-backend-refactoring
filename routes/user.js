@@ -161,6 +161,7 @@ router.put('/:userId/comment/:commentId', verifyToken, async (req, res, next) =>
     try {
        const {commentId} = req.params;
        const {newComment} = req.body;
+       console.log(newComment);
        await Comment.update(
            {comment: newComment},
            {where: {id: commentId}}
@@ -223,7 +224,7 @@ router.get('/:userId/posting/:postingId', verifyToken, async (req, res, next) =>
         });
         const tags = await posting.getTags();
         const selectedTags = tags.map(({tag}) => tag);
-        const images = await PostingImages.findAll({
+        const images = await PostingImage.findAll({
             attributes: ['id'],
             where: {post_id: postingId}
         });
@@ -240,6 +241,7 @@ router.get('/:userId/posting/:postingId', verifyToken, async (req, res, next) =>
         res.json(circularJson);
     }
     catch(err) {
+        console.log(err);
         next(err);
     }
 })
@@ -262,26 +264,19 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
                     exPosting.removeTag(tag.id);
                 })
             );
-            if(typeof tags === "object"){
-                const result = await Promise.all(
-                    tags.map((tag) => {
-                        return Tag.create({
-                            tag
-                        });
+            console.log(tags.split(','));
+            const result = await Promise.all(
+                tags.split(',').map((tag) => {
+                    return Tag.create({
+                        tag,
                     })
-                );
-                await exPosting.addTags(result.map(r => r.id));
-            }
-            else{
-                const result = await Tag.create({
-                    tag: tags,
-                });
-                await exPosting.addTags(result);
-            }
+                })
+            )
+            await exPosting.addTags(result.map(r => r.id));
         }
         const images = req.files;
         if(images) {
-            const prevImgs = await PostingImages.findAll({
+            const prevImgs = await PostingImage.findAll({
                 attributes: ['img_key'],
                 where: {post_id: postingId},
             });
@@ -294,12 +289,12 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
                     err ? console.error(err) : console.log('delete image success');
                 });
             });
-            await PostingImages.destroy({
+            await PostingImage.destroy({
                 where: {post_id: postingId},
             });
             await Promise.all(
                 images.map((img) => {
-                    PostingImages.create({
+                    PostingImage.create({
                         post_id: postingId,
                         img_key: img.key
                     });
@@ -311,6 +306,7 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
         res.json(jsonResponse(req, {message: 'success'}, 201, 'create'));
     }
     catch(err) {
+        console.log(err);
         next(err);
     }
 });
