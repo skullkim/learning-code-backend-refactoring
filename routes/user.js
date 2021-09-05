@@ -153,7 +153,7 @@ router.put('/:userId/password', verifyToken, async(req, res, next) => {
        if(!comparePassword) {
           res.status(401);
           return res.json(jsonErrorResponse(req,
-              {message: 'invalid password'},
+              {message: '유효하지 않는 비밀번호 입니다'},
               401,
               'Unauthorized'
           ));
