@@ -76,7 +76,6 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
         }
         if(req.file) {
             const {location, key} = req.file;
-            console.log(key);
             await User.update(
                 {profile_img_key: `${key}`},
                 {where: {id}}
@@ -94,7 +93,6 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
         return res.json(jsonResponse(req, {message: 'success'}, 201, 'create'));
     }
     catch(err) {
-        console.log(err);
         next(err);
     }
 });
@@ -125,7 +123,6 @@ router.get('/:userId/profile-image', async (req, res, next) => {
             Key: `${imgKey}`,
         }, (err, data) => {
             if(err) {
-                console.log(err);
                 next(err);
             }
             else {
@@ -175,7 +172,6 @@ router.put('/:userId/comment/:commentId', verifyToken, async (req, res, next) =>
     try {
        const {commentId} = req.params;
        const {newComment} = req.body;
-       console.log(newComment);
        await Comment.update(
            {comment: newComment},
            {where: {id: commentId}}
@@ -255,7 +251,6 @@ router.get('/:userId/posting/:postingId', verifyToken, async (req, res, next) =>
         res.json(circularJson);
     }
     catch(err) {
-        console.log(err);
         next(err);
     }
 })
@@ -278,7 +273,6 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
                     exPosting.removeTag(tag.id);
                 })
             );
-            console.log(tags.split(','));
             const result = await Promise.all(
                 tags.split(',').map((tag) => {
                     return Tag.create({
@@ -320,7 +314,6 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
         res.json(jsonResponse(req, {message: 'success'}, 201, 'create'));
     }
     catch(err) {
-        console.log(err);
         next(err);
     }
 });
@@ -422,7 +415,6 @@ router.post('/:userId/posting', verifyToken, uploadPostingImages.array('imgs'), 
         res.json(jsonResponse(req, {message: 'success'}, 201, 'created'));
     }
     catch(err) {
-        console.log(err);
         next(err);
     }
 });
