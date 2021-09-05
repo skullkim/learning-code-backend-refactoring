@@ -53,7 +53,7 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
             if(exName) {
                 res.contentType('application/vnd.api+json');
                 res.status(400);
-                return res.json(jsonErrorResponse(req, {message: `same name exist`}));
+                return res.json(jsonErrorResponse(req, {message: '이미 사용중인 닉네임 입니다'}));
             }
             await User.update(
                 {name},
@@ -67,7 +67,7 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
             if(exEmail) {
                 res.contentType('application/vnd.api+json');
                 res.status(400);
-                return res.json(jsonErrorResponse(req, {message: `same email exist`}));
+                return res.json(jsonErrorResponse(req, {message: `이미 사용중인 이메일 입니다`}));
             }
             await User.update(
                 {email},
@@ -76,8 +76,9 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
         }
         if(req.file) {
             const {location, key} = req.file;
+            console.log(key);
             await User.update(
-                {profile_key: `${key}`},
+                {profile_img_key: `${key}`},
                 {where: {id}}
             );
             const s3 = new AWS.S3();
@@ -91,6 +92,19 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
         res.contentType('application/vnd.api+json');
         res.status(201);
         return res.json(jsonResponse(req, {message: 'success'}, 201, 'create'));
+    }
+    catch(err) {
+        console.log(err);
+        next(err);
+    }
+});
+
+router.get('/:userId', verifyToken, async (req, res, next) => {
+    try {
+        const {id, name, email} = req.decoded;
+        res.contentType('application/vnd.api+json');
+        res.status(200);
+        res.json(jsonResponse(req, {id, name, email}));
     }
     catch(err) {
         next(err);

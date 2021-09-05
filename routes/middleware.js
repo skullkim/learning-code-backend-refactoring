@@ -35,7 +35,7 @@ exports.uploadProfileImage = multer({
         bucket: `${process.env.AWS_S3_BUCKET}`,
         key(req, file, done) {
             const ext = path.extname(file.originalname);
-            done(null, `upload/posting/${path.basename(file.originalname, ext) + Date.now()} + ext`);
+            done(null, `upload/profile/local/${path.basename(file.originalname, ext) + Date.now()}${ext}`);
         }
     })
 });
