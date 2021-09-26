@@ -9,7 +9,8 @@ const {jsonErrorResponse} = require('../lib/jsonResponse');
 exports.verifyToken = async (req, res, next) => {
     try {
         const {cookie} = req.headers;
-        const token = cookie.split('=')[1];
+        const {authorization} = req.headers;
+        const token = authorization.split(' ')[1];
         req.decoded = await jwt.verify(token, process.env.JWT_SECRET);
         req.data = req.decoded.data;
         next();
@@ -32,7 +33,7 @@ exports.uploadProfileImage = multer({
         bucket: `${process.env.AWS_S3_BUCKET}`,
         key(req, file, done) {
             const ext = path.extname(file.originalname);
-            done(null, `upload/posting/${path.basename(file.originalname, ext) + Date.now()} + ext`);
+            done(null, `upload/profile/local/${path.basename(file.originalname, ext) + Date.now()}${ext}`);
         }
     })
 });
@@ -44,6 +45,6 @@ exports.uploadPostingImages = multer({
         key(req, file, done) {
             const ext = path.extname(file.originalname);
             done(null, `upload/posting/${path.basename(file.originalname, ext) + Date.now() + ext}`);
-        }
+        },
     })
 });

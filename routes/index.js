@@ -42,7 +42,19 @@ router.get('/main-page-image/:image', async(req, res, next) => {
 
 router.get('/header', (req, res, next) => {
     const resData = {
-        "search" : ["제목", "카테고리", "도서"],
+        "search" : [
+            {
+                "key": "title",
+                "value": "제목"
+            },
+            {
+                "key": "category",
+                "value": "카테고리"
+            },
+            {
+                "key": "book",
+                "value": "도서"
+            }],
         "logo": "/main-page-image/footer-logo"
     };
     res.contentType('application/vnd.api+json');

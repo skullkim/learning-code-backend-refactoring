@@ -7,6 +7,9 @@ module.exports = class Token extends Sequelize.Model {
                 type: Sequelize.INTEGER,
                 allowNull: false,
             },
+            local_refresh: {
+                type: Sequelize.TEXT,
+            },
             kakao_access: {
                 type: Sequelize.TEXT,
             },

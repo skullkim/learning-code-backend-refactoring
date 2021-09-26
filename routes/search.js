@@ -35,7 +35,6 @@ router.get('/:target', async (req, res, next) => {
                     where: {main_category: {[Op.like]: `%${query}%`}},
                 });
                 if(written.length){
-                    console.log('posting' + written);
                     res.contentType('application/vnd.api+json');
                     res.status(200);
                     return res.json(jsonResponse(req, written));
@@ -43,10 +42,8 @@ router.get('/:target', async (req, res, next) => {
                 const tag = await Tag.findOne({
                     where: {tag: {[Op.like]: `%${query}%`}},
                 });
-                console.log(tag);
                 if(tag) {
                     const tagResult = await tag.getPostings();
-                    console.log('tag' + tagResult);
                     res.contentType('application/vnd.api+json');
                     res.status(200);
                     return res.json(jsonResponse(req, tagResult));
@@ -69,7 +66,6 @@ router.get('/:target', async (req, res, next) => {
         try{
             const {query} = req.query;
             const books = await findBook(query);
-            console.log(books);
             if(books.length) {
                 res.contentType('application/vnd.api+json');
                 res.status(200);
@@ -84,11 +80,11 @@ router.get('/:target', async (req, res, next) => {
     else {
         res.contentType('application/vnd.api+json');
         res.status(400);
-        return res.json(jsonErrorResponse(req, {message: 'incorrect target'}));
+        return res.json(jsonErrorResponse(req, [{message: 'incorrect target'}]));
     }
     res.contentType('application/vnd.api+json');
     res.status(200);
-    return res.json(jsonResponse(req, {message: 'no such result'}));
+    return res.json(jsonResponse(req, [{message: 'no such result'}]));
 });
 
 const findBook = async (target) => {

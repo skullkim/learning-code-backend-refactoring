@@ -32,7 +32,6 @@ router.get('/categories', async (req, res, next) => {
        res.json(jsonResponse(req, res_data));
     }
     catch(err) {
-        console.log(err);
         next(err);
     }
 });

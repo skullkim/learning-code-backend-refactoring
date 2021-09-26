@@ -31,7 +31,7 @@ router.get('/:userId/profile', verifyToken, async (req, res, next) => {
         const resComments = comments.map(({dataValues:{id, comment}}) => ({id, comment}));
         const responseData = {
             name,
-            profile_img: `/user/profile-image/${userId}`,
+            profile_img: `/user/${userId}/profile-image`,
             postings: resPostings,
             comments: resComments
         };
@@ -53,7 +53,7 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
             if(exName) {
                 res.contentType('application/vnd.api+json');
                 res.status(400);
-                return res.json(jsonErrorResponse(req, {message: `same name exist`}));
+                return res.json(jsonErrorResponse(req, {message: '이미 사용중인 닉네임 입니다'}));
             }
             await User.update(
                 {name},
@@ -67,7 +67,7 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
             if(exEmail) {
                 res.contentType('application/vnd.api+json');
                 res.status(400);
-                return res.json(jsonErrorResponse(req, {message: `same email exist`}));
+                return res.json(jsonErrorResponse(req, {message: `이미 사용중인 이메일 입니다`}));
             }
             await User.update(
                 {email},
@@ -77,7 +77,7 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
         if(req.file) {
             const {location, key} = req.file;
             await User.update(
-                {profile_key: `${key}`},
+                {profile_img_key: `${key}`},
                 {where: {id}}
             );
             const s3 = new AWS.S3();
@@ -97,23 +97,44 @@ router.put('/:userId/profile', verifyToken, uploadProfileImage.single('profileIm
     }
 });
 
-router.get('/:userId/profile-image', verifyToken, (req, res, next) => {
-   const {profile_img_key} = req.decoded;
-   const imgKey = profile_img_key || process.env.DEFAULT_PROFILE_IMG_KEY;
-   const s3 = new AWS.S3();
-   s3.getObject({
-       Bucket: `${process.env.AWS_S3_BUCKET}`,
-       Key: `${imgKey}`,
-   }, (err, data) => {
-       if(err) {
-           next(err);
-       }
-       else {
-           res.setHeader('Content-Type', 'image/png');
-           res.write(data.Body, 'binary');
-           res.end(null, 'binary');
-           }
-       });
+router.get('/:userId', verifyToken, async (req, res, next) => {
+    try {
+        const {id, name, email} = req.decoded;
+        res.contentType('application/vnd.api+json');
+        res.status(200);
+        res.json(jsonResponse(req, {id, name, email}));
+    }
+    catch(err) {
+        next(err);
+    }
+});
+
+router.get('/:userId/profile-image', async (req, res, next) => {
+    try {
+        const {userId} = req.params;
+        const exUser = await User.findOne({
+            where: {id: userId}
+        });
+        const {profile_img_key} = exUser;
+        const imgKey = profile_img_key || process.env.DEFAULT_PROFILE_IMG_KEY;
+        const s3 = new AWS.S3();
+        s3.getObject({
+            Bucket: `${process.env.AWS_S3_BUCKET}`,
+            Key: `${imgKey}`,
+        }, (err, data) => {
+            if(err) {
+                next(err);
+            }
+            else {
+                res.setHeader('Content-Type', 'image/png');
+                res.write(data.Body, 'binary');
+                res.end(null, 'binary');
+            }
+        });
+    }
+    catch(err) {
+        next(err);
+    }
 });
 
 
@@ -129,7 +150,7 @@ router.put('/:userId/password', verifyToken, async(req, res, next) => {
        if(!comparePassword) {
           res.status(401);
           return res.json(jsonErrorResponse(req,
-              {message: 'invalid password'},
+              {message: '유효하지 않는 비밀번호 입니다'},
               401,
               'Unauthorized'
           ));
@@ -213,7 +234,7 @@ router.get('/:userId/posting/:postingId', verifyToken, async (req, res, next) =>
         });
         const tags = await posting.getTags();
         const selectedTags = tags.map(({tag}) => tag);
-        const images = await PostingImages.findAll({
+        const images = await PostingImage.findAll({
             attributes: ['id'],
             where: {post_id: postingId}
         });
@@ -252,26 +273,18 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
                     exPosting.removeTag(tag.id);
                 })
             );
-            if(typeof tags === "object"){
-                const result = await Promise.all(
-                    tags.map((tag) => {
-                        return Tag.create({
-                            tag
-                        });
+            const result = await Promise.all(
+                tags.split(',').map((tag) => {
+                    return Tag.create({
+                        tag,
                     })
-                );
-                await exPosting.addTags(result.map(r => r.id));
-            }
-            else{
-                const result = await Tag.create({
-                    tag: tags,
-                });
-                await exPosting.addTags(result);
-            }
+                })
+            )
+            await exPosting.addTags(result.map(r => r.id));
         }
         const images = req.files;
         if(images) {
-            const prevImgs = await PostingImages.findAll({
+            const prevImgs = await PostingImage.findAll({
                 attributes: ['img_key'],
                 where: {post_id: postingId},
             });
@@ -284,12 +297,12 @@ router.put('/:userId/posting/:postingId', verifyToken, uploadPostingImages.array
                     err ? console.error(err) : console.log('delete image success');
                 });
             });
-            await PostingImages.destroy({
+            await PostingImage.destroy({
                 where: {post_id: postingId},
             });
             await Promise.all(
                 images.map((img) => {
-                    PostingImages.create({
+                    PostingImage.create({
                         post_id: postingId,
                         img_key: img.key
                     });
@@ -360,6 +373,7 @@ router.post('/:userId/posting', verifyToken, uploadPostingImages.array('imgs'), 
     try {
         const {id} = req.decoded;
         const {title, posting, category, tags} = req.body;
+        const tagsArr = tags.split(',');
         const newPosting = await Posting.create({
             author: id,
             title,
@@ -378,10 +392,10 @@ router.post('/:userId/posting', verifyToken, uploadPostingImages.array('imgs'), 
                 })
             );
         }
-        if(tags) {
-            if(typeof tags === 'object') {
+        if(tagsArr) {
+            if(typeof tagsArr === 'object') {
                 const result = await Promise.all(
-                    tags.map(tag => {
+                    tagsArr.map(tag => {
                         return Tag.create({
                             tag,
                         });
